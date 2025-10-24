@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - 二手车交易平台{% endblock %}
+
+{% block content %}
+<!-- 搜索区域 -->
+<div class="hero-section bg-light py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-primary">找到您的理想座驾</h1>
+                <p class="lead">专业二手车交易平台，海量真实车源，AI智能推荐，安全交易保障</p>
+                <div class="mt-4">
+                    <a href="{% url 'car_list' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-search"></i> 浏览车辆
+                    </a>
+                    <a href="{% url 'ai_recommendation' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-robot"></i> AI推荐
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="/static/images/car-hero.png" alt="二手车" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速搜索 -->
+<div class="search-section mb-5">
+    <div class="container">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">快速搜索车辆</h3>
+                <form method="get" action="{% url 'car_list' %}" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="brand" class="form-label">品牌</label>
+                        <select class="form-select" id="brand" name="brand">
+                            <option value="">所有品牌</option>
+                            <!-- 品牌选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="type" class="form-label">类型</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="">所有类型</option>
+                            <!-- 类型选项将通过JavaScript动态加载 -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="price_range" class="form-label">价格范围</label>
+                        <select class="form-select" id="price_range" name="price_range">
+                            <option value="">不限价格</option>
+                            <option value="0-5">0-5万</option>
+                            <option value="5-10">5-10万</option>
+                            <option value="10-20">10-20万</option>
+                            <option value="20-50">20-50万</option>
+                            <option value="50+">50万以上</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 特色功能 -->
+<div class="features-section mb-5">
+    <div class="container">
+        <h2 class="text-center mb-5">平台特色功能</h2>
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                </div>
+                <h4>安全交易</h4>
+                <p>严格审核机制，确保车辆信息真实可靠，交易过程安全透明</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-robot fa-3x text-primary"></i>
+                </div>
+                <h4>AI智能推荐</h4>
+                <p>基于大数据分析和机器学习，为您精准推荐符合需求的车辆</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-comments fa-3x text-primary"></i>
+                </div>
+                <h4>在线沟通</h4>
+                <p>买卖双方实时沟通，解决交易疑问，提升交易效率</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最新车辆 -->
+<div class="latest-cars mb-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>最新上架车辆</h2>
+            <a href="{% url 'car_list' %}" class="btn btn-outline-primary">查看全部</a>
+        </div>
+        <div class="row" id="latest-cars-container">
+            <!-- 最新车辆将通过JavaScript动态加载 -->
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统计数据 -->
+<div class="stats-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3 class="display-4 fw-bold" id="total-cars">0</h3>
+                <p>在售车辆</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="display-4 fw-bold" id="total-users">0</h3>
+                <p>注册用户</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="display-4 fw-bold" id="total-transactions">0</h3>
+                <p>成功交易</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="display-4 fw-bold" id="satisfaction-rate">0%</h3>
+                <p>用户满意度</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载品牌和类型数据
+    loadBrandsAndTypes();
+    // 加载最新车辆
+    loadLatestCars();
+    // 加载统计数据
+    loadStatistics();
+});
+
+function loadBrandsAndTypes() {
+    // 这里应该通过AJAX请求获取品牌和类型数据
+    // 简化示例，实际项目中需要调用API
+    console.log('加载品牌和类型数据...');
+}
+
+function loadLatestCars() {
+    fetch('/api/cars/latest/')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('latest-cars-container');
+            container.innerHTML = '';
+            
+            data.cars.forEach(car => {
+                const carCard = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <img src="${car.main_image}" class="card-img-top" alt="${car.brand} ${car.model}">
+                            <div class="card-body">
+                                <h5 class="card-title">${car.brand} ${car.model}</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">${car.year}年 | ${car.mileage}公里</small>
+                                </p>
+                                <p class="card-text text-primary fw-bold">¥${car.current_price}万</p>
+                                <a href="/cars/${car.id}/" class="btn btn-primary">查看详情</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += carCard;
+            });
+        })
+        .catch(error => {
+            console.error('加载最新车辆失败:', error);
+            document.getElementById('latest-cars-container').innerHTML = 
+                '<div class="col-12 text-center"><p>加载失败，请刷新页面重试</p></div>';
+        });
+}
+
+function loadStatistics() {
+    // 模拟统计数据加载
+    setTimeout(() => {
+        document.getElementById('total-cars').textContent = '1,258';
+        document.getElementById('total-users').textContent = '8,742';
+        document.getElementById('total-transactions').textContent = '3,156';
+        document.getElementById('satisfaction-rate').textContent = '98%';
+    }, 1000);
+}
+</script>
+{% endblock %}

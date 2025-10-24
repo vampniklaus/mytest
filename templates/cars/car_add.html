@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}上架车辆 - 二手车交易平台{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">上架车辆</h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">基本信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.brand.id_for_label }}" class="form-label">品牌</label>
+                                    {{ form.brand }}
+                                    {% if form.brand.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.brand.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.car_type.id_for_label }}" class="form-label">类型</label>
+                                    {{ form.car_type }}
+                                    {% if form.car_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.car_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.model.id_for_label }}" class="form-label">车型</label>
+                                    {{ form.model }}
+                                    {% if form.model.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.model.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.year.id_for_label }}" class="form-label">年份</label>
+                                    {{ form.year }}
+                                    {% if form.year.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.year.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.mileage.id_for_label }}" class="form-label">里程（公里）</label>
+                            {{ form.mileage }}
+                            {% if form.mileage.errors %}
+                                <div class="invalid-feedback d-block">{{ form.mileage.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">车辆详情</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.color.id_for_label }}" class="form-label">颜色</label>
+                                    {{ form.color }}
+                                    {% if form.color.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.color.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.transmission.id_for_label }}" class="form-label">变速箱</label>
+                                    {{ form.transmission }}
+                                    {% if form.transmission.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.transmission.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.fuel_type.id_for_label }}" class="form-label">燃料类型</label>
+                                    {{ form.fuel_type }}
+                                    {% if form.fuel_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.fuel_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.engine_capacity.id_for_label }}" class="form-label">排量（L）</label>
+                                    {{ form.engine_capacity }}
+                                    {% if form.engine_capacity.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.engine_capacity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">价格信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.original_price.id_for_label }}" class="form-label">原价（元）</label>
+                                    {{ form.original_price }}
+                                    {% if form.original_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.original_price.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.current_price.id_for_label }}" class="form-label">当前价格（元）</label>
+                                    {{ form.current_price }}
+                                    {% if form.current_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.current_price.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">车辆图片</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.main_image.id_for_label }}" class="form-label">主图</label>
+                            {{ form.main_image }}
+                            {% if form.main_image.errors %}
+                                <div class="invalid-feedback d-block">{{ form.main_image.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <h6 class="mb-3">附加图片</h6>
+                        {{ image_formset.management_form }}
+                        {% for form in image_formset %}
+                            <div class="row mb-3 image-form">
+                                <div class="col-md-8">
+                                    <label class="form-label">图片</label>
+                                    {{ form.image }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">是否主图</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.is_main }}
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label">删除</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.DELETE }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">车辆特性</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ feature_formset.management_form }}
+                        {% for form in feature_formset %}
+                            <div class="row mb-3 feature-form">
+                                <div class="col-md-5">
+                                    <label class="form-label">特性名称</label>
+                                    {{ form.feature_name }}
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">特性值</label>
+                                    {{ form.feature_value }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">删除</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.DELETE }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">车辆描述</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'car_list' %}" class="btn btn-secondary me-md-2">取消</a>
+                    <button type="submit" class="btn btn-primary">上架车辆</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.image-form, .feature-form {
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

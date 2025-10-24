@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}AI智能推荐 - 二手车交易系统{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">AI智能推荐</h2>
+    
+    <!-- 偏好设置区域 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">个性化偏好设置</h5>
+        </div>
+        <div class="card-body">
+            <form id="preferenceForm" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">偏好品牌</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_brands" value="1" id="brand1">
+                                <label class="form-check-label" for="brand1">
+                                    大众
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_brands" value="2" id="brand2">
+                                <label class="form-check-label" for="brand2">
+                                    丰田
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_brands" value="3" id="brand3">
+                                <label class="form-check-label" for="brand3">
+                                    本田
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_brands" value="4" id="brand4">
+                                <label class="form-check-label" for="brand4">
+                                    宝马
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_brands" value="5" id="brand5">
+                                <label class="form-check-label" for="brand5">
+                                    奔驰
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">预算范围</label>
+                            <select name="budget_range" class="form-select">
+                                <option value="0-5">0-5万</option>
+                                <option value="5-10" selected>5-10万</option>
+                                <option value="10-20">10-20万</option>
+                                <option value="20-50">20-50万</option>
+                                <option value="50+">50万以上</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">车辆类型</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_types" value="1" id="type1">
+                                <label class="form-check-label" for="type1">轿车</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_types" value="2" id="type2">
+                                <label class="form-check-label" for="type2">SUV</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="preferred_types" value="3" id="type3">
+                                <label class="form-check-label" for="type3">MPV</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">最小年份</label>
+                            <input type="number" name="min_year" class="form-control" value="2015" min="2000" max="2024">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">最大里程（万公里）</label>
+                            <input type="number" name="max_mileage" class="form-control" value="10" min="0" max="50" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">保存偏好并获取推荐</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 推荐结果区域 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">AI推荐结果</h5>
+        </div>
+        <div class="card-body">
+            <div id="recommendationResults">
+                <div class="alert alert-info">
+                    <h6>请先设置您的偏好，然后点击"保存偏好并获取推荐"按钮</h6>
+                    <p class="mb-0">AI将根据您的偏好为您推荐最合适的车辆</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 推荐算法说明 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">推荐算法说明</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+                        </div>
+                        <h6>协同过滤</h6>
+                        <p class="text-muted small">基于相似用户的购买行为为您推荐</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-tags" style="font-size: 2rem;"></i>
+                        </div>
+                        <h6>内容推荐</h6>
+                        <p class="text-muted small">根据车辆特征与您偏好的匹配度推荐</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-lightning" style="font-size: 2rem;"></i>
+                        </div>
+                        <h6>实时学习</h6>
+                        <p class="text-muted small">根据您的点击和收藏行为持续优化推荐</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#preferenceForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // 显示加载状态
+        $('#recommendationResults').html(`
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-2">AI正在为您分析推荐...</p>
+            </div>
+        `);
+        
+        // 模拟AI推荐结果（实际项目中应该调用后端API）
+        setTimeout(function() {
+            var recommendations = [
+                {
+                    id: 1,
+                    brand: '丰田',
+                    model: '卡罗拉',
+                    year: 2020,
+                    mileage: 5.2,
+                    price: 9.8,
+                    matchScore: 95,
+                    reason: '基于您的预算和品牌偏好，这款车性价比极高'
+                },
+                {
+                    id: 2,
+                    brand: '本田',
+                    model: '思域',
+                    year: 2019,
+                    mileage: 6.8,
+                    price: 10.5,
+                    matchScore: 88,
+                    reason: '符合您的车型偏好，市场口碑良好'
+                },
+                {
+                    id: 3,
+                    brand: '大众',
+                    model: '朗逸',
+                    year: 2021,
+                    mileage: 3.5,
+                    price: 11.2,
+                    matchScore: 82,
+                    reason: '新车况，里程数低，保值率高'
+                }
+            ];
+            
+            var html = '<h6 class="mb-3">为您找到 ' + recommendations.length + ' 辆匹配车辆</h6>';
+            
+            recommendations.forEach(function(car) {
+                html += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    <span class="text-muted">车辆图片</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>${car.brand} ${car.model}</h5>
+                                <p class="mb-1"><strong>年份：</strong>${car.year}年</p>
+                                <p class="mb-1"><strong>里程：</strong>${car.mileage}万公里</p>
+                                <p class="mb-1"><strong>价格：</strong><span class="text-primary">¥${car.price}万</span></p>
+                                <p class="mb-0 text-success"><strong>推荐理由：</strong>${car.reason}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <div class="bg-success text-white rounded-pill px-3 py-2 mb-2">
+                                        <strong>匹配度 ${car.matchScore}%</strong>
+                                    </div>
+                                    <a href="/cars/${car.id}/" class="btn btn-primary btn-sm">查看详情</a>
+                                    <button class="btn btn-outline-secondary btn-sm mt-2">
+                                        <i class="bi bi-heart"></i> 收藏
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            $('#recommendationResults').html(html);
+        }, 2000);
+    });
+});
+</script>
+{% endblock %}

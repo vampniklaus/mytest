@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}车辆浏览 - 二手车交易系统{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">车辆浏览</h2>
+    
+    <!-- 搜索和筛选区域 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="brand" class="form-label">品牌</label>
+                    <select name="brand" id="brand" class="form-select">
+                        <option value="">全部品牌</option>
+                        {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:'s' %}selected{% endif %}>
+                            {{ brand.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="type" class="form-label">车型</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">全部车型</option>
+                        {% for car_type in car_types %}
+                        <option value="{{ car_type.id }}" {% if request.GET.type == car_type.id|stringformat:'s' %}selected{% endif %}>
+                            {{ car_type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="price_range" class="form-label">价格区间</label>
+                    <select name="price_range" id="price_range" class="form-select">
+                        <option value="">全部价格</option>
+                        <option value="0-5" {% if request.GET.price_range == '0-5' %}selected{% endif %}>5万以下</option>
+                        <option value="5-10" {% if request.GET.price_range == '5-10' %}selected{% endif %}>5-10万</option>
+                        <option value="10-20" {% if request.GET.price_range == '10-20' %}selected{% endif %}>10-20万</option>
+                        <option value="20-50" {% if request.GET.price_range == '20-50' %}selected{% endif %}>20-50万</option>
+                        <option value="50+" {% if request.GET.price_range == '50+' %}selected{% endif %}>50万以上</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">筛选</button>
+                        <a href="{% url 'car_list' %}" class="btn btn-secondary">重置</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 车辆列表 -->
+    <div class="row">
+        {% if cars %}
+            {% for car in cars %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if car.images.first %}
+                    <img src="{{ car.images.first.image.url }}" class="card-img-top" alt="{{ car.brand.name }} {{ car.model }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">暂无图片</span>
+                    </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ car.brand.name }} {{ car.model }}</h5>
+                        <p class="card-text text-muted">{{ car.car_type.name }} · {{ car.year }}年 · {{ car.mileage }}万公里</p>
+                        <div class="mt-auto">
+                            <p class="card-text"><strong class="text-primary">¥{{ car.current_price }}</strong></p>
+                            <a href="{% url 'car_detail' car.id %}" class="btn btn-primary btn-sm">查看详情</a>
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-outline-secondary btn-sm favorite-btn" data-car-id="{{ car.id }}">
+                                <i class="bi bi-heart"></i> 收藏
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h4>暂无车辆信息</h4>
+                    <p>当前没有符合条件的车辆，请尝试调整筛选条件。</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<script>
+$(document).ready(function() {
+    $('.favorite-btn').click(function() {
+        var carId = $(this).data('car-id');
+        var button = $(this);
+        
+        $.ajax({
+            url: '/users/favorites/toggle/' + carId + '/',
+            type: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response) {
+                if (response.status === 'added') {
+                    button.html('<i class="bi bi-heart-fill text-danger"></i> 已收藏');
+                    button.removeClass('btn-outline-secondary').addClass('btn-outline-danger');
+                } else {
+                    button.html('<i class="bi bi-heart"></i> 收藏');
+                    button.removeClass('btn-outline-danger').addClass('btn-outline-secondary');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

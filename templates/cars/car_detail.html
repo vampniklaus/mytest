@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ car.brand.name }} {{ car.model }} - 二手车交易系统{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- 车辆基本信息 -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- 车辆图片 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    {% if car.images.all %}
+                    <div id="carImages" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in car.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ car.brand.name }} {{ car.model }}" style="height: 400px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if car.images.all|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carImages" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carImages" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <span class="text-muted">暂无图片</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 车辆详细信息 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">车辆详细信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>品牌：</strong>{{ car.brand.name }}</p>
+                            <p><strong>车型：</strong>{{ car.model }}</p>
+                            <p><strong>车辆类型：</strong>{{ car.car_type.name }}</p>
+                            <p><strong>上牌年份：</strong>{{ car.year }}年</p>
+                            <p><strong>里程数：</strong>{{ car.mileage }}万公里</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>变速箱：</strong>{{ car.get_transmission_display }}</p>
+                            <p><strong>燃料类型：</strong>{{ car.get_fuel_type_display }}</p>
+                            <p><strong>颜色：</strong>{{ car.color }}</p>
+                            <p><strong>排放标准：</strong>{{ car.get_emission_standard_display }}</p>
+                            <p><strong>车辆状态：</strong>{{ car.get_status_display }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>车辆描述：</strong></p>
+                    <p>{{ car.description|default:"暂无描述" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- 价格和卖家信息 -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h3 class="text-primary mb-3">¥{{ car.current_price }}</h3>
+                    <p class="text-muted">原价：¥{{ car.original_price }}</p>
+                    
+                    {% if user.is_authenticated %}
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary favorite-btn" data-car-id="{{ car.id }}">
+                            <i class="bi bi-heart"></i> 收藏车辆
+                        </button>
+                        <a href="#" class="btn btn-success" onclick="alert('聊天功能暂未开放'); return false;">
+                            <i class="bi bi-chat-dots"></i> 联系卖家
+                        </a>
+                        <a href="#" class="btn btn-warning" onclick="alert('购买功能暂未开放'); return false;">
+                            <i class="bi bi-cart"></i> 立即购买
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p>请<a href="{% url 'login' %}">登录</a>后联系卖家或购买车辆</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 卖家信息 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">卖家信息</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <span class="fw-bold">{{ car.seller.username|first|upper }}</span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ car.seller.username }}</h6>
+                            <small class="text-muted">注册时间：{{ car.seller.date_joined|date:"Y-m-d" }}</small>
+                        </div>
+                    </div>
+                    <p class="mb-2"><strong>联系电话：</strong>{{ car.seller.phone|default:"未提供" }}</p>
+                    <p class="mb-0"><strong>所在地区：</strong>{{ car.seller.location|default:"未提供" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<script>
+$(document).ready(function() {
+    $('.favorite-btn').click(function() {
+        var carId = $(this).data('car-id');
+        var button = $(this);
+        
+        $.ajax({
+            url: '/users/favorites/toggle/' + carId + '/',
+            type: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(response) {
+                if (response.status === 'added') {
+                    button.html('<i class="bi bi-heart-fill text-danger"></i> 已收藏');
+                    button.removeClass('btn-primary').addClass('btn-outline-danger');
+                } else {
+                    button.html('<i class="bi bi-heart"></i> 收藏车辆');
+                    button.removeClass('btn-outline-danger').addClass('btn-primary');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -45,13 +45,21 @@
                     <h5 class="mb-0">我的收藏</h5>
                 </div>
                 <div class="card-body">
+                    <!-- 调试信息 -->
+                    <div class="alert alert-info d-none" id="debug-info">
+                        <p>收藏数量: {{ favorites|length }}</p>
+                        <p>当前用户: {{ user.username }}</p>
+                    </div>
+                    
                     {% if favorites %}
                         <div class="row">
                             {% for favorite in favorites %}
                             <div class="col-md-6 mb-4">
                                 <div class="card h-100">
-                                    {% if favorite.car.images.first %}
+                                    {% if favorite.car.images.exists %}
                                     <img src="{{ favorite.car.images.first.image.url }}" class="card-img-top" alt="{{ favorite.car.brand.name }} {{ favorite.car.model }}" style="height: 200px; object-fit: cover;">
+                                    {% elif favorite.car.main_image and favorite.car.main_image.url %}
+                                    <img src="{{ favorite.car.main_image.url }}" class="card-img-top" alt="{{ favorite.car.brand.name }} {{ favorite.car.model }}" style="height: 200px; object-fit: cover;">
                                     {% else %}
                                     <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                         <span class="text-muted">暂无图片</span>
@@ -84,6 +92,7 @@
                             </div>
                             <h5>暂无收藏车辆</h5>
                             <p class="text-muted">您还没有收藏任何车辆，快去浏览车辆并添加收藏吧！</p>
+                            <p class="text-muted small">当前用户: {{ user.username }}</p>
                             <a href="{% url 'car_list' %}" class="btn btn-primary">浏览车辆</a>
                         </div>
                     {% endif %}
@@ -94,29 +103,74 @@
 </div>
 
 <script>
-$(document).ready(function() {
+// 检查jQuery是否已加载
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery未加载，正在重新加载');
+    // 动态加载jQuery
+    var script = document.createElement('script');
+    script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+    script.onload = function() {
+        console.log('jQuery加载完成');
+        initFavoriteFunctionality();
+    };
+    document.head.appendChild(script);
+} else {
+    $(document).ready(function() {
+        initFavoriteFunctionality();
+    });
+}
+
+function initFavoriteFunctionality() {
+    console.log('初始化收藏功能，jQuery版本:', $.fn.jquery);
     $('.favorite-btn').click(function() {
         var carId = $(this).data('car-id');
         var button = $(this);
         var card = button.closest('.col-md-6');
+        
+        console.log('点击删除按钮，车辆ID:', carId);
+        console.log('按钮元素:', button);
+        console.log('卡片元素:', card);
         
         $.ajax({
             url: '/users/favorites/toggle/' + carId + '/',
             type: 'POST',
             headers: {'X-CSRFToken': '{{ csrf_token }}'},
             success: function(response) {
+                console.log('AJAX响应:', response);
+                
                 if (response.status === 'removed') {
+                    console.log('删除成功，开始淡出动画');
                     card.fadeOut(300, function() {
+                        console.log('淡出完成，移除元素');
                         $(this).remove();
                         // 如果所有收藏都被移除，显示空状态
-                        if ($('.col-md-6').length === 0) {
+                        var remainingCards = $('.col-md-6');
+                        console.log('剩余卡片数量:', remainingCards.length);
+                        if (remainingCards.length === 0) {
+                            console.log('所有收藏已删除，刷新页面');
                             location.reload();
                         }
                     });
+                } else if (response.status === 'added') {
+                    // 在收藏页面不应该出现添加的情况，但为了完整性处理
+                    console.log('添加收藏（不应该在收藏页面出现）');
+                    console.log('当前车辆ID:', carId);
+                    console.log('响应消息:', response.message);
+                    
+                    // 在收藏页面，如果返回added状态，说明有问题，应该刷新页面
+                    alert('操作异常，请刷新页面后重试');
+                    location.reload();
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error('删除收藏失败:', error);
+                alert('删除收藏失败，请刷新页面后重试');
             }
         });
     });
-});
+    
+    // 显示调试信息（开发时使用）
+    $('#debug-info').removeClass('d-none');
+}
 </script>
 {% endblock %}

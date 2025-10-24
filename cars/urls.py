@@ -8,4 +8,8 @@ urlpatterns = [
     path('<int:pk>/edit/', views.CarUpdateView.as_view(), name='car_edit'),
     path('<int:car_id>/', views.car_detail, name='car_detail'),
 
+    # API接口
+    path('api/latest/', views.latest_cars_api, name='latest_cars_api'),
+    path('api/brands/', views.brands_api, name='brands_api'),
+    path('api/car-types/', views.car_types_api, name='car_types_api'),
 ]

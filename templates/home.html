@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <img src="/static/images/car-hero.png" alt="二手车" class="img-fluid rounded">
+                <img src="/static/images/car-hero.svg" alt="二手车" class="img-fluid rounded">
             </div>
         </div>
     </div>
@@ -157,41 +157,127 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadBrandsAndTypes() {
-    // 这里应该通过AJAX请求获取品牌和类型数据
-    // 简化示例，实际项目中需要调用API
-    console.log('加载品牌和类型数据...');
+    console.log('开始加载品牌和类型数据...');
+    
+    // 加载品牌数据
+    fetch('/cars/api/brands/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`品牌数据加载失败: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const brandSelect = document.getElementById('brand');
+            brandSelect.innerHTML = '<option value="">所有品牌</option>';
+            
+            data.brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand.id;
+                option.textContent = brand.name;
+                brandSelect.appendChild(option);
+            });
+            console.log('品牌数据加载完成');
+        })
+        .catch(error => {
+            console.error('品牌数据加载失败:', error);
+            // 使用默认选项
+            const brandSelect = document.getElementById('brand');
+            brandSelect.innerHTML = `
+                <option value="">所有品牌</option>
+                <option value="1">奥迪</option>
+                <option value="2">宝马</option>
+                <option value="3">奔驰</option>
+                <option value="4">大众</option>
+                <option value="5">丰田</option>
+            `;
+        });
+    
+    // 加载车辆类型数据
+    fetch('/cars/api/car-types/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`类型数据加载失败: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const typeSelect = document.getElementById('type');
+            typeSelect.innerHTML = '<option value="">所有类型</option>';
+            
+            data.car_types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.id;
+                option.textContent = type.name;
+                typeSelect.appendChild(option);
+            });
+            console.log('类型数据加载完成');
+        })
+        .catch(error => {
+            console.error('类型数据加载失败:', error);
+            // 使用默认选项
+            const typeSelect = document.getElementById('type');
+            typeSelect.innerHTML = `
+                <option value="">所有类型</option>
+                <option value="1">轿车</option>
+                <option value="2">SUV</option>
+                <option value="3">MPV</option>
+                <option value="4">跑车</option>
+            `;
+        });
 }
 
 function loadLatestCars() {
-    fetch('/api/cars/latest/')
-        .then(response => response.json())
+    console.log('开始加载最新车辆数据...');
+    
+    fetch('/cars/api/latest/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`车辆数据加载失败: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('最新车辆数据:', data);
             const container = document.getElementById('latest-cars-container');
             container.innerHTML = '';
             
-            data.cars.forEach(car => {
-                const carCard = `
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <img src="${car.main_image}" class="card-img-top" alt="${car.brand} ${car.model}">
-                            <div class="card-body">
-                                <h5 class="card-title">${car.brand} ${car.model}</h5>
-                                <p class="card-text">
-                                    <small class="text-muted">${car.year}年 | ${car.mileage}公里</small>
-                                </p>
-                                <p class="card-text text-primary fw-bold">¥${car.current_price}万</p>
-                                <a href="/cars/${car.id}/" class="btn btn-primary">查看详情</a>
+            if (data.cars && data.cars.length > 0) {
+                data.cars.forEach(car => {
+                    const carCard = `
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <img src="${car.main_image}" class="card-img-top" alt="${car.brand} ${car.model}" style="height: 200px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">${car.brand} ${car.model}</h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">${car.year}年 | ${car.mileage}</small>
+                                    </p>
+                                    <p class="card-text text-primary fw-bold mt-auto">¥${car.current_price}</p>
+                                    <a href="/cars/${car.id}/" class="btn btn-primary">查看详情</a>
+                                </div>
                             </div>
                         </div>
+                    `;
+                    container.innerHTML += carCard;
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">暂无最新车辆</p>
+                        <a href="{% url 'car_list' %}" class="btn btn-primary">浏览全部车辆</a>
                     </div>
                 `;
-                container.innerHTML += carCard;
-            });
+            }
         })
         .catch(error => {
             console.error('加载最新车辆失败:', error);
-            document.getElementById('latest-cars-container').innerHTML = 
-                '<div class="col-12 text-center"><p>加载失败，请刷新页面重试</p></div>';
+            document.getElementById('latest-cars-container').innerHTML = `
+                <div class="col-12 text-center">
+                    <p class="text-danger">车辆数据加载失败</p>
+                    <button onclick="loadLatestCars()" class="btn btn-outline-primary">重新加载</button>
+                </div>
+            `;
         });
 }
 

@@ -141,3 +141,36 @@ def car_management(request):
     
     return render(request, 'cars/car_management.html', {'cars': cars})
 
+
+
+def latest_cars_api(request):
+    """获取最新车辆API接口"""
+    latest_cars = Car.objects.filter(status='approved').order_by('-created_at')[:6]
+    
+    cars_data = []
+    for car in latest_cars:
+        car_data = {
+            'id': car.id,
+            'brand': car.brand.name if car.brand else '未知品牌',
+            'model': car.model,
+            'year': car.year,
+            'mileage': f"{car.mileage}万公里",
+            'current_price': car.current_price,
+            'main_image': car.main_image.url if car.main_image else '/static/images/default-car.svg'
+        }
+        cars_data.append(car_data)
+    
+    return JsonResponse({'cars': cars_data})
+
+def brands_api(request):
+    """获取品牌数据API接口"""
+    brands = Brand.objects.all()
+    brands_data = [{'id': brand.id, 'name': brand.name} for brand in brands]
+    return JsonResponse({'brands': brands_data})
+
+def car_types_api(request):
+    """获取车辆类型数据API接口"""
+    car_types = CarType.objects.all()
+    types_data = [{'id': car_type.id, 'name': car_type.name} for car_type in car_types]
+    return JsonResponse({'car_types': types_data})
+

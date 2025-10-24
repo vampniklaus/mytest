@@ -96,27 +96,58 @@
 
 {% if user.is_authenticated %}
 <script>
-$(document).ready(function() {
+// 检查jQuery是否已加载
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery未加载，正在重新加载');
+    // 动态加载jQuery
+    var script = document.createElement('script');
+    script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+    script.onload = function() {
+        console.log('jQuery加载完成');
+        initCarListFavoriteFunctionality();
+    };
+    document.head.appendChild(script);
+} else {
+    $(document).ready(function() {
+        initCarListFavoriteFunctionality();
+    });
+}
+
+function initCarListFavoriteFunctionality() {
+    console.log('初始化车辆列表收藏功能，jQuery版本:', $.fn.jquery);
+    
     $('.favorite-btn').click(function() {
         var carId = $(this).data('car-id');
         var button = $(this);
+        
+        console.log('点击收藏按钮，车辆ID:', carId);
         
         $.ajax({
             url: '/users/favorites/toggle/' + carId + '/',
             type: 'POST',
             headers: {'X-CSRFToken': '{{ csrf_token }}'},
             success: function(response) {
+                console.log('AJAX响应:', response);
+                
                 if (response.status === 'added') {
                     button.html('<i class="bi bi-heart-fill text-danger"></i> 已收藏');
                     button.removeClass('btn-outline-secondary').addClass('btn-outline-danger');
-                } else {
+                    console.log('收藏成功');
+                } else if (response.status === 'removed') {
                     button.html('<i class="bi bi-heart"></i> 收藏');
                     button.removeClass('btn-outline-danger').addClass('btn-outline-secondary');
+                    console.log('取消收藏成功');
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error('收藏操作失败:', error);
+                console.log('响应状态:', xhr.status);
+                console.log('响应文本:', xhr.responseText);
+                alert('收藏操作失败，请刷新页面后重试');
             }
         });
     });
-});
+}
 </script>
 {% endif %}
 {% endblock %}

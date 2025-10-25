@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ room.room_id }} - 聊天室 - 二手车交易系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- 聊天室侧边栏 -->
+        <div class="col-md-3 border-end bg-light p-0 d-none d-md-block">
+            <div class="d-flex flex-column h-100">
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">聊天室</h5>
+                        <a href="{% url 'chat:chat_rooms' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="flex-grow-1 overflow-auto">
+                    <div id="chat-rooms-sidebar" class="list-group list-group-flush">
+                        <!-- 聊天室列表将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 聊天主区域 -->
+        <div class="col-md-9 col-12 d-flex flex-column h-100">
+            <!-- 聊天头部 -->
+            <div class="border-bottom p-3 bg-white">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <img id="chat-partner-avatar" src="" alt="" class="rounded-circle" width="40" height="40">
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0" id="chat-partner-name">加载中...</h6>
+                        <small class="text-muted" id="chat-partner-status">离线</small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshChat()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 聊天消息区域 -->
+            <div id="chat-messages" class="flex-grow-1 overflow-auto p-3 bg-light">
+                <div class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在加载消息...</p>
+                </div>
+            </div>
+            
+            <!-- 消息输入区域 -->
+            <div class="border-top p-3 bg-white">
+                <form id="message-form" class="d-flex gap-2">
+                    <div class="flex-grow-1">
+                        <input type="text" id="message-input" class="form-control" 
+                               placeholder="输入消息..." maxlength="500" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> 发送
+                    </button>
+                </form>
+                <div class="mt-2">
+                    <small class="text-muted">按 Enter 发送，Shift+Enter 换行</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 消息模板 -->
+<template id="message-template">
+    <div class="message-item">
+        <div class="d-flex mb-3">
+            <div class="flex-shrink-0">
+                <img src="" alt="" class="rounded-circle" width="32" height="32" id="message-avatar">
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <div class="d-flex align-items-center mb-1">
+                    <strong id="message-sender">用户名</strong>
+                    <small class="text-muted ms-2" id="message-time">刚刚</small>
+                </div>
+                <div class="message-bubble" id="message-content">
+                    消息内容
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 系统消息模板 -->
+<template id="system-message-template">
+    <div class="text-center my-3">
+        <span class="badge bg-secondary">系统消息</span>
+        <small class="text-muted ms-2" id="system-message-content">系统消息内容</small>
+    </div>
+</template>
+
+<style>
+.message-item.own {
+    flex-direction: row-reverse;
+}
+.message-item.own .flex-grow-1 {
+    margin-left: 0;
+    margin-right: 1rem;
+    text-align: right;
+}
+.message-bubble {
+    background: #fff;
+    border-radius: 18px;
+    padding: 8px 16px;
+    max-width: 70%;
+    word-wrap: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.message-item.own .message-bubble {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+}
+#chat-messages {
+    scroll-behavior: smooth;
+}
+.message-item {
+    animation: fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+let currentRoomId = '{{ room.room_id }}';
+let messageInterval;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadChatRoomInfo();
+    loadMessages();
+    setupMessageForm();
+    
+    // 每5秒刷新一次消息
+    messageInterval = setInterval(loadMessages, 5000);
+    
+    // 加载侧边栏聊天室列表
+    loadSidebarRooms();
+});
+
+function loadChatRoomInfo() {
+    // 从房间ID解析对方用户信息
+    const roomParts = currentRoomId.split('_');
+    if (roomParts[0] === 'transaction') {
+        // 交易聊天室：transaction_{car_id}_{buyer_id}_{seller_id}
+        document.getElementById('chat-partner-name').textContent = '卖家用户';
+    } else {
+        // 客服聊天室
+        document.getElementById('chat-partner-name').textContent = '客服';
+    }
+    
+    // 设置默认头像
+    document.getElementById('chat-partner-avatar').src = '/static/images/default-avatar.png';
+}
+
+function loadMessages() {
+    fetch(`/chat/api/messages/${currentRoomId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('加载消息失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayMessages(data.messages);
+        })
+        .catch(error => {
+            console.error('加载消息失败:', error);
+            showMessageError('加载消息失败，请刷新页面重试');
+        });
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('chat-messages');
+    
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-chat-dots display-1 text-muted"></i>
+                <h4 class="mt-3">开始聊天</h4>
+                <p class="text-muted">发送第一条消息开始对话</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    messages.forEach(message => {
+        let messageElement;
+        
+        if (message.message_type === 'system') {
+            const template = document.getElementById('system-message-template');
+            messageElement = template.content.cloneNode(true);
+            messageElement.querySelector('#system-message-content').textContent = message.content;
+        } else {
+            const template = document.getElementById('message-template');
+            messageElement = template.content.cloneNode(true);
+            
+            const messageItem = messageElement.querySelector('.message-item');
+            if (message.is_own) {
+                messageItem.classList.add('own');
+            }
+            
+            // 设置头像
+            const avatar = messageElement.querySelector('#message-avatar');
+            avatar.src = message.sender.avatar || '/static/images/default-avatar.png';
+            avatar.alt = message.sender.username;
+            
+            // 设置发送者名称
+            messageElement.querySelector('#message-sender').textContent = message.sender.username;
+            
+            // 设置消息时间
+            messageElement.querySelector('#message-time').textContent = formatTime(message.timestamp);
+            
+            // 设置消息内容
+            const contentElement = messageElement.querySelector('#message-content');
+            contentElement.textContent = message.content;
+            
+            // 如果是图片消息
+            if (message.message_type === 'image' && message.image) {
+                contentElement.innerHTML = `<img src="${message.image}" alt="图片" class="img-fluid" style="max-width: 200px;">`;
+            }
+        }
+        
+        container.appendChild(messageElement);
+    });
+    
+    // 滚动到底部
+    container.scrollTop = container.scrollHeight;
+}
+
+function setupMessageForm() {
+    const form = document.getElementById('message-form');
+    const input = document.getElementById('message-input');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
+    });
+    
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+}
+
+function sendMessage() {
+    const input = document.getElementById('message-input');
+    const content = input.value.trim();
+    
+    if (!content) return;
+    
+    // 禁用输入框
+    input.disabled = true;
+    
+    fetch(`/chat/api/messages/${currentRoomId}/send/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('发送失败');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            // 立即刷新消息
+            loadMessages();
+        }
+    })
+    .catch(error => {
+        console.error('发送消息失败:', error);
+        alert('发送消息失败，请重试');
+    })
+    .finally(() => {
+        input.disabled = false;
+        input.focus();
+    });
+}
+
+function loadSidebarRooms() {
+    fetch('/chat/api/rooms/')
+        .then(response => response.json())
+        .then(data => {
+            displaySidebarRooms(data.rooms);
+        })
+        .catch(error => {
+            console.error('加载侧边栏聊天室失败:', error);
+        });
+}
+
+function displaySidebarRooms(rooms) {
+    const container = document.getElementById('chat-rooms-sidebar');
+    container.innerHTML = '';
+    
+    rooms.forEach(room => {
+        const roomElement = document.createElement('a');
+        roomElement.href = `/chat/${room.room_id}/`;
+        roomElement.className = `list-group-item list-group-item-action ${room.room_id === currentRoomId ? 'active' : ''}`;
+        
+        roomElement.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <img src="${room.other_user?.avatar || '/static/images/default-avatar.png'}" 
+                         alt="${room.other_user?.username || '客服'}" 
+                         class="rounded-circle" width="32" height="32">
+                </div>
+                <div class="flex-grow-1 ms-2">
+                    <h6 class="mb-0">${room.room_name}</h6>
+                    <small class="text-muted">${room.last_message.content}</small>
+                </div>
+                ${room.unread_count > 0 ? `<span class="badge bg-primary rounded-pill">${room.unread_count}</span>` : ''}
+            </div>
+        `;
+        
+        container.appendChild(roomElement);
+    });
+}
+
+function refreshChat() {
+    loadMessages();
+    loadSidebarRooms();
+}
+
+function formatTime(timestamp) {
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    const diffMs = now - messageTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return '刚刚';
+    if (diffMins < 60) return `${diffMins}分钟前`;
+    
+    return messageTime.toLocaleTimeString('zh-CN', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function getCSRFToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+    return cookieValue || '';
+}
+
+function showMessageError(message) {
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = `
+        <div class="text-center py-4">
+            <i class="bi bi-exclamation-triangle text-warning display-4"></i>
+            <p class="mt-2 text-muted">${message}</p>
+            <button class="btn btn-outline-primary" onclick="loadMessages()">
+                <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+        </div>
+    `;
+}
+
+// 页面卸载时清除定时器
+window.addEventListener('beforeunload', function() {
+    if (messageInterval) {
+        clearInterval(messageInterval);
+    }
+});
+</script>
+{% endblock %}

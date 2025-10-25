@@ -79,9 +79,9 @@
                         <button class="btn btn-primary favorite-btn" data-car-id="{{ car.id }}">
                             <i class="bi bi-heart"></i> 收藏车辆
                         </button>
-                        <a href="#" class="btn btn-success" onclick="alert('聊天功能暂未开放'); return false;">
+                        <button class="btn btn-success" onclick="startChatWithSeller({{ car.id }})">
                             <i class="bi bi-chat-dots"></i> 联系卖家
-                        </a>
+                        </button>
                         <a href="#" class="btn btn-warning" onclick="alert('购买功能暂未开放'); return false;">
                             <i class="bi bi-cart"></i> 立即购买
                         </a>
@@ -142,6 +142,45 @@ $(document).ready(function() {
         });
     });
 });
+
+// 联系卖家功能
+function startChatWithSeller(carId) {
+    const button = document.querySelector('.btn-success');
+    const originalText = button.innerHTML;
+    
+    // 显示加载状态
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split"></i> 创建聊天中...';
+    
+    fetch(`/chat/api/rooms/car/${carId}/`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('创建聊天室失败');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // 跳转到聊天室
+            window.location.href = data.redirect_url;
+        } else {
+            throw new Error(data.error || '创建聊天室失败');
+        }
+    })
+    .catch(error => {
+        console.error('联系卖家失败:', error);
+        alert('联系卖家失败：' + error.message);
+        
+        // 恢复按钮状态
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
 </script>
 {% endif %}
 {% endblock %}

@@ -49,6 +49,9 @@
                             <li><a class="dropdown-item" href="{% url 'user_profile' %}">个人资料</a></li>
                             <li><a class="dropdown-item" href="{% url 'favorites' %}">我的收藏</a></li>
                             <li><a class="dropdown-item" href="{% url 'transaction_history' %}">交易记录</a></li>
+                            <li><a class="dropdown-item" href="{% url 'chat:chat_rooms' %}">
+                                <i class="bi bi-chat-dots"></i> 我的聊天室
+                            </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">退出登录</a></li>
                         </ul>

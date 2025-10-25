@@ -282,13 +282,28 @@ function loadLatestCars() {
 }
 
 function loadStatistics() {
-    // 模拟统计数据加载
-    setTimeout(() => {
-        document.getElementById('total-cars').textContent = '1,258';
-        document.getElementById('total-users').textContent = '8,742';
-        document.getElementById('total-transactions').textContent = '3,156';
-        document.getElementById('satisfaction-rate').textContent = '98%';
-    }, 1000);
+    // 从数据库获取真实统计数据
+    fetch('/cars/api/statistics/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`统计数据加载失败: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('total-cars').textContent = data.total_cars.toLocaleString();
+            document.getElementById('total-users').textContent = data.total_users.toLocaleString();
+            document.getElementById('total-transactions').textContent = data.total_transactions.toLocaleString();
+            document.getElementById('satisfaction-rate').textContent = data.satisfaction_rate + '%';
+        })
+        .catch(error => {
+            console.error('加载统计数据失败:', error);
+            // 如果API失败，使用模拟数据
+            document.getElementById('total-cars').textContent = '13';
+            document.getElementById('total-users').textContent = '50';
+            document.getElementById('total-transactions').textContent = '25';
+            document.getElementById('satisfaction-rate').textContent = '95%';
+        });
 }
 </script>
 {% endblock %}

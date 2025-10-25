@@ -149,6 +149,12 @@ def latest_cars_api(request):
     
     cars_data = []
     for car in latest_cars:
+        # 检查是否有主图片，如果没有则使用默认图片
+        if car.main_image and hasattr(car.main_image, 'url'):
+            main_image_url = car.main_image.url
+        else:
+            main_image_url = '/static/images/default-car.svg'
+        
         car_data = {
             'id': car.id,
             'brand': car.brand.name if car.brand else '未知品牌',
@@ -156,7 +162,7 @@ def latest_cars_api(request):
             'year': car.year,
             'mileage': f"{car.mileage}万公里",
             'current_price': car.current_price,
-            'main_image': car.main_image.url if car.main_image else '/static/images/default-car.svg'
+            'main_image': main_image_url
         }
         cars_data.append(car_data)
     
@@ -173,4 +179,58 @@ def car_types_api(request):
     car_types = CarType.objects.all()
     types_data = [{'id': car_type.id, 'name': car_type.name} for car_type in car_types]
     return JsonResponse({'car_types': types_data})
+
+def statistics_api(request):
+    """获取统计数据API接口"""
+    from django.contrib.auth import get_user_model
+    from transactions.models import Transaction
+    
+    # 获取真实统计数据
+    total_cars = Car.objects.filter(status='approved').count()
+    User = get_user_model()
+    total_users = User.objects.count()
+    total_transactions = Transaction.objects.filter(status='completed').count()
+    
+    # 计算满意度（基于交易评价）
+    completed_transactions = Transaction.objects.filter(status='completed')
+    if completed_transactions.exists():
+        total_rating = sum(t.rating or 0 for t in completed_transactions if t.rating)
+        avg_rating = total_rating / completed_transactions.count()
+        satisfaction_rate = min(100, int(avg_rating * 20))  # 5星制转换为百分比
+    else:
+        satisfaction_rate = 95  # 默认满意度
+    
+    return JsonResponse({
+        'total_cars': total_cars,
+        'total_users': total_users,
+        'total_transactions': total_transactions,
+        'satisfaction_rate': satisfaction_rate
+    })
+
+def statistics_api(request):
+    """获取统计数据API接口"""
+    from django.contrib.auth import get_user_model
+    from transactions.models import Transaction
+    
+    # 获取真实统计数据
+    total_cars = Car.objects.filter(status='approved').count()
+    User = get_user_model()
+    total_users = User.objects.count()
+    total_transactions = Transaction.objects.filter(status='completed').count()
+    
+    # 计算满意度（基于交易评价）
+    completed_transactions = Transaction.objects.filter(status='completed')
+    if completed_transactions.exists():
+        total_rating = sum(t.rating or 0 for t in completed_transactions if t.rating)
+        avg_rating = total_rating / completed_transactions.count()
+        satisfaction_rate = min(100, int(avg_rating * 20))  # 5星制转换为百分比
+    else:
+        satisfaction_rate = 95  # 默认满意度
+    
+    return JsonResponse({
+        'total_cars': total_cars,
+        'total_users': total_users,
+        'total_transactions': total_transactions,
+        'satisfaction_rate': satisfaction_rate
+    })
 

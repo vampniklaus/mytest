@@ -28,7 +28,7 @@ class ChatRoom(models.Model):
 class ChatParticipant(models.Model):
     """聊天室参与者"""
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_participants')
     joined_at = models.DateTimeField(_('加入时间'), auto_now_add=True)
     is_active = models.BooleanField(_('是否活跃'), default=True)
     
